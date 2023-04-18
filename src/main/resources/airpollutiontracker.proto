@@ -1,0 +1,54 @@
+syntax = "proto3";
+//Options for the GRPC
+option java_multiple_files = true;
+option java_package = "ds.airpollutiontracker";
+option java_outer_classname = "AirPollutionTrackerImpl";
+package airpollutiontracker;
+
+service AirPollutionTracker {
+// RPC to retrieve historical air pollution data
+	rpc GetAirPollutionHistory (AirPollutionHistoryRequest) returns (stream
+	AirPollutionLevel) {
+	}
+	// RPC to retrieve air pollution alerts triggered by the system
+	rpc GetAirPollutionAlerts (AirPollutionAlertsRequest) returns
+	(AirPollutionAlertsResponse) {
+	}
+	// Bidirectional streaming RPC to monitor air pollution in real-time
+	rpc MonitorAirPollution (stream AirPollutionMonitorRequest) returns (stream
+	AirPollutionLevel) {
+	}
+}
+
+message AirPollutionHistoryRequest {
+	int64 start_time = 1;
+	int64 end_time = 2;
+	string location = 3;
+}
+
+message AirPollutionAlertsRequest {
+	int32 threshold = 1;
+	string location = 2;
+}
+
+message AirPollutionAlertsResponse {
+	repeated AirPollutionAlert alerts = 1;
+}
+
+message AirPollutionAlert {
+	string location = 1;
+	string pollution_type = 2;
+	float pollution_level = 3;
+	string timestamp = 4;
+}
+
+message AirPollutionMonitorRequest {
+	string location = 1;
+}
+
+message AirPollutionLevel {
+	string location = 1;
+	string pollution_type = 2;
+	float pollution_level = 3;
+	string timestamp = 4;
+}

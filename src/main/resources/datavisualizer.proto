@@ -1,0 +1,48 @@
+syntax = "proto3";
+//Options for the GRPC
+option java_multiple_files = true;
+option java_package = "ds.datavisualizer";
+option java_outer_classname = "DataVisualizerImpl";
+package datavisualizer;
+
+service DataVisualization {
+// Server-side streaming RPC to retrieve pollution statistics
+	rpc GetPollutionStatistics (PollutionStatisticsRequest) returns (stream
+	PollutionStatistics) {
+	}
+	// Bidirectional streaming RPC to filter pollution data by location
+	rpc FilterDataByLocation (stream LocationFilterRequest) returns (stream
+	PollutionLevel) {
+	}
+	// Client-side streaming RPC to set favorite locations
+	rpc SetFavoriteLocation (stream FavoriteLocationRequest) returns (stream
+	FavoriteLocationResponse) {
+	}
+}
+
+message PollutionStatisticsRequest {
+	string location = 1;
+}
+
+message PollutionStatistics {
+	string statistic_type = 1;
+	float value = 2;
+}
+
+message LocationFilterRequest {
+	string location = 1;
+}
+
+message FavoriteLocationRequest {
+	string location = 1;
+}
+
+message FavoriteLocationResponse {
+	string message = 1;
+}
+
+message PollutionLevel {
+	float value = 1;
+	string unit = 2;
+}
+
