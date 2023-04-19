@@ -8,17 +8,7 @@ public interface PollutionStatisticsOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string statistic_type = 1;</code>
+   * <code>float averagePollutionLevel = 1;</code>
    */
-  java.lang.String getStatisticType();
-  /**
-   * <code>string statistic_type = 1;</code>
-   */
-  com.google.protobuf.ByteString
-      getStatisticTypeBytes();
-
-  /**
-   * <code>float value = 2;</code>
-   */
-  float getValue();
+  float getAveragePollutionLevel();
 }

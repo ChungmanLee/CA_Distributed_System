@@ -8,12 +8,12 @@ public interface FavoriteLocationResponseOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string message = 1;</code>
+   * <code>string status = 1;</code>
    */
-  java.lang.String getMessage();
+  java.lang.String getStatus();
   /**
-   * <code>string message = 1;</code>
+   * <code>string status = 1;</code>
    */
   com.google.protobuf.ByteString
-      getMessageBytes();
+      getStatusBytes();
 }

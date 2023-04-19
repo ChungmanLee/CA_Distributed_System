@@ -8,17 +8,32 @@ public interface PollutionLevelOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>float value = 1;</code>
+   * <code>string location = 1;</code>
    */
-  float getValue();
-
+  java.lang.String getLocation();
   /**
-   * <code>string unit = 2;</code>
-   */
-  java.lang.String getUnit();
-  /**
-   * <code>string unit = 2;</code>
+   * <code>string location = 1;</code>
    */
   com.google.protobuf.ByteString
-      getUnitBytes();
+      getLocationBytes();
+
+  /**
+   * <code>string pollutionType = 2;</code>
+   */
+  java.lang.String getPollutionType();
+  /**
+   * <code>string pollutionType = 2;</code>
+   */
+  com.google.protobuf.ByteString
+      getPollutionTypeBytes();
+
+  /**
+   * <code>float pollutionLevel = 3;</code>
+   */
+  float getPollutionLevel();
+
+  /**
+   * <code>int64 timestamp = 4;</code>
+   */
+  long getTimestamp();
 }

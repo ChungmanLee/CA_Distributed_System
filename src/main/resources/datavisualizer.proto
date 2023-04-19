@@ -21,28 +21,29 @@ service DataVisualization {
 }
 
 message PollutionStatisticsRequest {
-	string location = 1;
+    string location = 1;
 }
 
 message PollutionStatistics {
-	string statistic_type = 1;
-	float value = 2;
+    float averagePollutionLevel = 1;
 }
 
 message LocationFilterRequest {
-	string location = 1;
+    string location = 1;
 }
 
 message FavoriteLocationRequest {
-	string location = 1;
+    string location = 1;
 }
 
 message FavoriteLocationResponse {
-	string message = 1;
+    string status = 1;
 }
 
 message PollutionLevel {
-	float value = 1;
-	string unit = 2;
+    string location = 1;
+    string pollutionType = 2;
+    float pollutionLevel = 3;
+    int64 timestamp = 4;
 }
 

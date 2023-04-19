@@ -16,8 +16,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private PollutionStatistics() {
-    statisticType_ = "";
-    value_ = 0F;
+    averagePollutionLevel_ = 0F;
   }
 
   @java.lang.Override
@@ -44,15 +43,9 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 10: {
-            java.lang.String s = input.readStringRequireUtf8();
+          case 13: {
 
-            statisticType_ = s;
-            break;
-          }
-          case 21: {
-
-            value_ = input.readFloat();
+            averagePollutionLevel_ = input.readFloat();
             break;
           }
           default: {
@@ -87,47 +80,13 @@ private static final long serialVersionUID = 0L;
             ds.datavisualizer.PollutionStatistics.class, ds.datavisualizer.PollutionStatistics.Builder.class);
   }
 
-  public static final int STATISTIC_TYPE_FIELD_NUMBER = 1;
-  private volatile java.lang.Object statisticType_;
+  public static final int AVERAGEPOLLUTIONLEVEL_FIELD_NUMBER = 1;
+  private float averagePollutionLevel_;
   /**
-   * <code>string statistic_type = 1;</code>
+   * <code>float averagePollutionLevel = 1;</code>
    */
-  public java.lang.String getStatisticType() {
-    java.lang.Object ref = statisticType_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      statisticType_ = s;
-      return s;
-    }
-  }
-  /**
-   * <code>string statistic_type = 1;</code>
-   */
-  public com.google.protobuf.ByteString
-      getStatisticTypeBytes() {
-    java.lang.Object ref = statisticType_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      statisticType_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
-  }
-
-  public static final int VALUE_FIELD_NUMBER = 2;
-  private float value_;
-  /**
-   * <code>float value = 2;</code>
-   */
-  public float getValue() {
-    return value_;
+  public float getAveragePollutionLevel() {
+    return averagePollutionLevel_;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -144,11 +103,8 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getStatisticTypeBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, statisticType_);
-    }
-    if (value_ != 0F) {
-      output.writeFloat(2, value_);
+    if (averagePollutionLevel_ != 0F) {
+      output.writeFloat(1, averagePollutionLevel_);
     }
     unknownFields.writeTo(output);
   }
@@ -159,12 +115,9 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getStatisticTypeBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, statisticType_);
-    }
-    if (value_ != 0F) {
+    if (averagePollutionLevel_ != 0F) {
       size += com.google.protobuf.CodedOutputStream
-        .computeFloatSize(2, value_);
+        .computeFloatSize(1, averagePollutionLevel_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -182,12 +135,10 @@ private static final long serialVersionUID = 0L;
     ds.datavisualizer.PollutionStatistics other = (ds.datavisualizer.PollutionStatistics) obj;
 
     boolean result = true;
-    result = result && getStatisticType()
-        .equals(other.getStatisticType());
     result = result && (
-        java.lang.Float.floatToIntBits(getValue())
+        java.lang.Float.floatToIntBits(getAveragePollutionLevel())
         == java.lang.Float.floatToIntBits(
-            other.getValue()));
+            other.getAveragePollutionLevel()));
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -199,11 +150,9 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + STATISTIC_TYPE_FIELD_NUMBER;
-    hash = (53 * hash) + getStatisticType().hashCode();
-    hash = (37 * hash) + VALUE_FIELD_NUMBER;
+    hash = (37 * hash) + AVERAGEPOLLUTIONLEVEL_FIELD_NUMBER;
     hash = (53 * hash) + java.lang.Float.floatToIntBits(
-        getValue());
+        getAveragePollutionLevel());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -337,9 +286,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      statisticType_ = "";
-
-      value_ = 0F;
+      averagePollutionLevel_ = 0F;
 
       return this;
     }
@@ -367,8 +314,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public ds.datavisualizer.PollutionStatistics buildPartial() {
       ds.datavisualizer.PollutionStatistics result = new ds.datavisualizer.PollutionStatistics(this);
-      result.statisticType_ = statisticType_;
-      result.value_ = value_;
+      result.averagePollutionLevel_ = averagePollutionLevel_;
       onBuilt();
       return result;
     }
@@ -417,12 +363,8 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(ds.datavisualizer.PollutionStatistics other) {
       if (other == ds.datavisualizer.PollutionStatistics.getDefaultInstance()) return this;
-      if (!other.getStatisticType().isEmpty()) {
-        statisticType_ = other.statisticType_;
-        onChanged();
-      }
-      if (other.getValue() != 0F) {
-        setValue(other.getValue());
+      if (other.getAveragePollutionLevel() != 0F) {
+        setAveragePollutionLevel(other.getAveragePollutionLevel());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -453,97 +395,28 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object statisticType_ = "";
+    private float averagePollutionLevel_ ;
     /**
-     * <code>string statistic_type = 1;</code>
+     * <code>float averagePollutionLevel = 1;</code>
      */
-    public java.lang.String getStatisticType() {
-      java.lang.Object ref = statisticType_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        statisticType_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    public float getAveragePollutionLevel() {
+      return averagePollutionLevel_;
     }
     /**
-     * <code>string statistic_type = 1;</code>
+     * <code>float averagePollutionLevel = 1;</code>
      */
-    public com.google.protobuf.ByteString
-        getStatisticTypeBytes() {
-      java.lang.Object ref = statisticType_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        statisticType_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>string statistic_type = 1;</code>
-     */
-    public Builder setStatisticType(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  
-      statisticType_ = value;
+    public Builder setAveragePollutionLevel(float value) {
+      
+      averagePollutionLevel_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>string statistic_type = 1;</code>
+     * <code>float averagePollutionLevel = 1;</code>
      */
-    public Builder clearStatisticType() {
+    public Builder clearAveragePollutionLevel() {
       
-      statisticType_ = getDefaultInstance().getStatisticType();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>string statistic_type = 1;</code>
-     */
-    public Builder setStatisticTypeBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-      
-      statisticType_ = value;
-      onChanged();
-      return this;
-    }
-
-    private float value_ ;
-    /**
-     * <code>float value = 2;</code>
-     */
-    public float getValue() {
-      return value_;
-    }
-    /**
-     * <code>float value = 2;</code>
-     */
-    public Builder setValue(float value) {
-      
-      value_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>float value = 2;</code>
-     */
-    public Builder clearValue() {
-      
-      value_ = 0F;
+      averagePollutionLevel_ = 0F;
       onChanged();
       return this;
     }
