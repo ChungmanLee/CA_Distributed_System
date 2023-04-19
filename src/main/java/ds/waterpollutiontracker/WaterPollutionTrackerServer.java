@@ -2,12 +2,13 @@ package ds.waterpollutiontracker;
 
 import java.io.IOException;
 
+import ds.waterpollutiontracker.WaterPollutionTrackerGrpc.WaterPollutionTrackerImplBase;
 import ds.waterpollutiontracker.WaterPollutionTrackerServer;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
-public class WaterPollutionTrackerServer {
+public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase{
 	public static void main(String[] args) throws InterruptedException, IOException {
 		WaterPollutionTrackerServer wTracker = new WaterPollutionTrackerServer();
 
