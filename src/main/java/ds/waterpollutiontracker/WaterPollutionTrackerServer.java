@@ -1,11 +1,15 @@
 package ds.waterpollutiontracker;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 
 import ds.waterpollutiontracker.WaterPollutionTrackerGrpc.WaterPollutionTrackerImplBase;
 import io.grpc.Server;
@@ -13,10 +17,10 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
+    static int port = 50084;
     public static void main(String[] args) throws InterruptedException, IOException {
         WaterPollutionTrackerServer wTracker = new WaterPollutionTrackerServer();
 
-        int port = 50151;
 
         Server server;
         try {
@@ -26,7 +30,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
                     .start();
 
             System.out.println("WaterPollutionTracker started, listening on " + port);
-
+            
+            registerWithJmDNS();
             server.awaitTermination();
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,8 +121,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             WaterPollutionLevel level = WaterPollutionLevel.newBuilder()
-                    .setLocation("SampleLocation")
-                    .setPollutionType("Chemical")
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Pollution type" + i)
                     .setPollutionLevel(random.nextFloat() * 200)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
                     .build();
@@ -132,13 +137,36 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         Random random = new Random();
         for (int i = 0; i < 5; i++) {
             WaterPollutionAlert alert = WaterPollutionAlert.newBuilder()
-                    .setLocation("SampleLocation")
-                    .setPollutionType("Chemical")
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Pollution type " + i)
                     .setPollutionLevel(random.nextFloat() * 300)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
                     .build();
             alerts.add(alert);
         }
         return alerts;
+    }
+    
+ // Add the JmDNS registration method here
+    public static void registerWithJmDNS() {
+        try {
+            // Create a JmDNS instance
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+            // Register a service
+            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "water-pollution-tracker", port, "WaterPollutionTracker service");
+            jmdns.registerService(serviceInfo);
+
+            // Wait a bit
+            Thread.sleep(20000);
+
+            // Unregister all services
+            // jmdns.unregisterAllServices();
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                jmdns.unregisterAllServices();
+            }));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

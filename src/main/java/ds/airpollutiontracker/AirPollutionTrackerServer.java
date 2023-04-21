@@ -1,11 +1,15 @@
 package ds.airpollutiontracker;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 
 import ds.airpollutiontracker.AirPollutionTrackerGrpc.AirPollutionTrackerImplBase;
 import io.grpc.Server;
@@ -13,10 +17,11 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
+	static int port = 50342;
     public static void main(String[] args) throws InterruptedException, IOException {
         AirPollutionTrackerServer aTracker = new AirPollutionTrackerServer();
 
-        int port = 50351;
+        
 
         Server server;
         try {
@@ -26,7 +31,8 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
                     .start();
 
             System.out.println("AirPollutionTracker started, listening on " + port);
-
+            
+            registerWithJmDNS();
             server.awaitTermination();
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,7 +122,7 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             AirPollutionLevel level = AirPollutionLevel.newBuilder()
-                    .setLocation("SampleLocation")
+                    .setLocation("Dublin " + i)
                     .setPollutionType("PM2.5")
                     .setPollutionLevel(random.nextFloat() * 200)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
@@ -132,7 +138,7 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
         Random random = new Random();
         for (int i = 0; i < 5; i++) {
             AirPollutionAlert alert = AirPollutionAlert.newBuilder()
-                    .setLocation("SampleLocation")
+                    .setLocation("Dunlin " + i)
                     .setPollutionType("PM2.5")
                     .setPollutionLevel(random.nextFloat() * 300)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
@@ -140,5 +146,25 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
             alerts.add(alert);
         }
         return alerts;
+    }
+    
+    // JmDNS registration method
+    public static void registerWithJmDNS() {
+        try {
+            // Create a JmDNS instance
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+            // Register a service
+            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "air-pollution-tracker", port, "AirPollutionTracker service");
+            jmdns.registerService(serviceInfo);
+
+            // Wait a bit
+            Thread.sleep(20000);
+
+            // Unregister all services
+            // jmdns.unregisterAllServices();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

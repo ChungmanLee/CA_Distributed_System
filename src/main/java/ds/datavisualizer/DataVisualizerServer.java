@@ -1,10 +1,14 @@
 package ds.datavisualizer;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import javax.jmdns.JmDNS;
+import javax.jmdns.ServiceInfo;
 
 import ds.datavisualizer.DataVisualizationGrpc.DataVisualizationImplBase;
 import io.grpc.Server;
@@ -12,17 +16,19 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class DataVisualizerServer extends DataVisualizationImplBase {
+	static int port = 50243;
     public static void main(String[] args) throws InterruptedException, IOException {
         DataVisualizerServer dataVisualizer = new DataVisualizerServer();
 
-        int port = 50251;
+        
 
         Server server;
         try {
             server = ServerBuilder.forPort(port).addService(dataVisualizer).build().start();
 
             System.out.println("DataVisualizer started, listening on " + port);
-
+            
+            registerWithJmDNS();
             server.awaitTermination();
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,5 +115,25 @@ public class DataVisualizerServer extends DataVisualizationImplBase {
             pollutionData.add(pollutionLevel);
         }
         return pollutionData;
+    }
+    
+    // JmDNS registration method
+    public static void registerWithJmDNS() {
+        try {
+            // Create a JmDNS instance
+            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+            // Register a service
+            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "data-visualizer", port, "DataVisualizer service");
+            jmdns.registerService(serviceInfo);
+
+            // Wait a bit
+            Thread.sleep(20000);
+
+            // Unregister all services
+            // jmdns.unregisterAllServices();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
