@@ -17,11 +17,10 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
-	static int port = 50342;
+	static int port = 50085;
+	
     public static void main(String[] args) throws InterruptedException, IOException {
         AirPollutionTrackerServer aTracker = new AirPollutionTrackerServer();
-
-        
 
         Server server;
         try {
@@ -44,12 +43,12 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
     @Override
     public void getAirPollutionHistory(AirPollutionHistoryRequest request,
                                        StreamObserver<AirPollutionLevel> responseObserver) {
-        // TODO: Replace this with actual data retrieval from the database
-        List<AirPollutionLevel> pollutionLevels = generateSampleData();
-
         Instant startTime = Instant.ofEpochMilli(request.getStartTime());
         Instant endTime = Instant.ofEpochMilli(request.getEndTime());
         String location = request.getLocation();
+
+        // Call the generateSampleData() method with startTime and endTime
+        List<AirPollutionLevel> pollutionLevels = generateSampleData(startTime, endTime);
 
         List<AirPollutionLevel> filteredData = pollutionLevels.stream()
                 .filter(level -> level.getLocation().equals(location))
@@ -95,8 +94,8 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
                 String location = request.getLocation();
 
                 // Generate sample data for demonstration purposes
-                List<AirPollutionLevel> pollutionLevels = generateSampleData();
-
+                List<AirPollutionLevel> pollutionLevels = generateSampleDataMonitor();
+                
                 for (AirPollutionLevel level : pollutionLevels) {
                     if (level.getLocation().equals(location)) {
                         responseObserver.onNext(level);
@@ -115,15 +114,51 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
             }
         };
     }
+    
+    private List<AirPollutionLevel> generateSampleData(Instant startTime, Instant endTime) {
+        // This method generates sample data for demonstration purposes
+        List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            Instant timestamp = startTime.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
+            AirPollutionLevel level = AirPollutionLevel.newBuilder()
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Polluion type " + i)
+                    .setPollutionLevel(random.nextFloat() * 200)
+                    .setTimestamp(timestamp.toString())
+                    .build();
+            pollutionLevels.add(level);
+        }
+        for (int i = 0; i < 10; i++) {
+            Instant timestamp = startTime.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
+            AirPollutionLevel level = AirPollutionLevel.newBuilder()
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Polluion type " + i)
+                    .setPollutionLevel(random.nextFloat() * 200)
+                    .setTimestamp(timestamp.toString())
+                    .build();
+            pollutionLevels.add(level);
+        }
+        return pollutionLevels;
+    }
 
-    private List<AirPollutionLevel> generateSampleData() {
+    private List<AirPollutionLevel> generateSampleDataMonitor() {
         // This method generates sample data for demonstration purposes
         List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
         Random random = new Random();
         for (int i = 0; i < 10; i++) {
             AirPollutionLevel level = AirPollutionLevel.newBuilder()
                     .setLocation("Dublin " + i)
-                    .setPollutionType("PM2.5")
+                    .setPollutionType("Polluion type " + i)
+                    .setPollutionLevel(random.nextFloat() * 200)
+                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
+                    .build();
+            pollutionLevels.add(level);
+        }
+        for (int i = 0; i < 10; i++) {
+            AirPollutionLevel level = AirPollutionLevel.newBuilder()
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Polluion type " + i)
                     .setPollutionLevel(random.nextFloat() * 200)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
                     .build();
@@ -139,7 +174,7 @@ public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
         for (int i = 0; i < 5; i++) {
             AirPollutionAlert alert = AirPollutionAlert.newBuilder()
                     .setLocation("Dunlin " + i)
-                    .setPollutionType("PM2.5")
+                    .setPollutionType("Pollution type " + i)
                     .setPollutionLevel(random.nextFloat() * 300)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
                     .build();

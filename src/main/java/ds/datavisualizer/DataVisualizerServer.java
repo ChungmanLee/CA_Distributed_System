@@ -16,7 +16,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class DataVisualizerServer extends DataVisualizationImplBase {
-	static int port = 50243;
+	static int port = 50143;
     public static void main(String[] args) throws InterruptedException, IOException {
         DataVisualizerServer dataVisualizer = new DataVisualizerServer();
 
@@ -42,7 +42,7 @@ public class DataVisualizerServer extends DataVisualizationImplBase {
                                        StreamObserver<PollutionStatistics> responseObserver) {
         List<PollutionLevel> sampleData = generateSamplePollutionData();
         // Process the sample data to calculate pollution statistics
-        // For simplicity, we'll just send the first pollution level as an example
+        // For simplicity, I'll just send the first pollution level as an example
         PollutionStatistics statistics = PollutionStatistics.newBuilder()
                 .setAveragePollutionLevel(sampleData.get(0).getPollutionLevel()).build();
         responseObserver.onNext(statistics);
@@ -107,10 +107,10 @@ public class DataVisualizerServer extends DataVisualizationImplBase {
         // This method generates sample data for demonstration purposes
         List<PollutionLevel> pollutionData = new ArrayList<>();
         Random random = new Random();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i <= 10; i++) {
             PollutionLevel pollutionLevel = PollutionLevel.newBuilder()
-                    .setLocation("SampleLocation")
-                    .setPollutionType("Chemical")
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Pollution type "+ i)
                     .setPollutionLevel(random.nextFloat() * 100).setTimestamp(Instant.now().getEpochSecond()).build();
             pollutionData.add(pollutionLevel);
         }

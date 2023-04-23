@@ -18,9 +18,9 @@ import io.grpc.stub.StreamObserver;
 
 public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
     static int port = 50084;
+    
     public static void main(String[] args) throws InterruptedException, IOException {
         WaterPollutionTrackerServer wTracker = new WaterPollutionTrackerServer();
-
 
         Server server;
         try {
@@ -43,12 +43,12 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
     @Override
     public void getWaterPollutionHistory(WaterPollutionHistoryRequest request,
                                          StreamObserver<WaterPollutionLevel> responseObserver) {
-        // TODO: Replace this with actual data retrieval from the database
-        List<WaterPollutionLevel> pollutionLevels = generateSampleData();
-
         Instant startTime = Instant.ofEpochMilli(request.getStartTime());
         Instant endTime = Instant.ofEpochMilli(request.getEndTime());
         String location = request.getLocation();
+
+        // Pass startTime and endTime to generateSampleData()
+        List<WaterPollutionLevel> pollutionLevels = generateSampleDataHistory(startTime, endTime);
 
         List<WaterPollutionLevel> filteredData = pollutionLevels.stream()
                 .filter(level -> level.getLocation().equals(location))
@@ -94,8 +94,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
                 String location = request.getLocation();
 
                 // Generate sample data for demonstration purposes
-                List<WaterPollutionLevel> pollutionLevels = generateSampleData();
-
+                List<WaterPollutionLevel> pollutionLevels = generateSampleDataMonitor();
+                
                 for (WaterPollutionLevel level : pollutionLevels) {
                     if (level.getLocation().equals(location)) {
                         responseObserver.onNext(level);
@@ -114,15 +114,54 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
             }
         };
     }
-
-    private List<WaterPollutionLevel> generateSampleData() {
+    
+    private List<WaterPollutionLevel> generateSampleDataHistory(Instant startTime, Instant endTime) {
         // This method generates sample data for demonstration purposes
         List<WaterPollutionLevel> pollutionLevels = new ArrayList<>();
         Random random = new Random();
-        for (int i = 0; i < 10; i++) {
+        long duration = endTime.toEpochMilli() - startTime.toEpochMilli();
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 3; j++) {
+                long randomTimestamp = startTime.toEpochMilli() + (long) (random.nextDouble() * duration);
+                Instant sampleTimestamp = Instant.ofEpochMilli(randomTimestamp);
+                WaterPollutionLevel level = WaterPollutionLevel.newBuilder()
+                        .setLocation("Dublin " + i)
+                        .setPollutionType("Pollution type " + i)
+                        .setPollutionLevel(random.nextFloat() * 200)
+                        .setTimestamp(sampleTimestamp.toString())
+                        .build();
+                pollutionLevels.add(level);
+            }
+        }
+        return pollutionLevels;
+    }
+
+    private List<WaterPollutionLevel> generateSampleDataMonitor() {
+        // This method generates sample data for demonstration purposes
+        List<WaterPollutionLevel> pollutionLevels = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 1; i <= 10; i++) {
             WaterPollutionLevel level = WaterPollutionLevel.newBuilder()
                     .setLocation("Dublin " + i)
-                    .setPollutionType("Pollution type" + i)
+                    .setPollutionType("Pollution type " + i)
+                    .setPollutionLevel(random.nextFloat() * 200)
+                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
+                    .build();
+            pollutionLevels.add(level);
+        }
+        for (int i = 1; i <= 10; i++) {
+            WaterPollutionLevel level = WaterPollutionLevel.newBuilder()
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Pollution type " + i)
+                    .setPollutionLevel(random.nextFloat() * 200)
+                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
+                    .build();
+            pollutionLevels.add(level);
+        }
+        for (int i = 1; i <= 10; i++) {
+            WaterPollutionLevel level = WaterPollutionLevel.newBuilder()
+                    .setLocation("Dublin " + i)
+                    .setPollutionType("Pollution type " + i)
                     .setPollutionLevel(random.nextFloat() * 200)
                     .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
                     .build();
@@ -135,7 +174,7 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         // This method generates sample alerts for demonstration purposes
         List<WaterPollutionAlert> alerts = new ArrayList<>();
         Random random = new Random();
-        for (int i = 0; i < 5; i++) {
+        for (int i = 1; i <= 5; i++) {
             WaterPollutionAlert alert = WaterPollutionAlert.newBuilder()
                     .setLocation("Dublin " + i)
                     .setPollutionType("Pollution type " + i)
