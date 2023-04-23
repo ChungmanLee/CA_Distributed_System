@@ -2,9 +2,11 @@ package ds.waterpollutiontracker;
 
 import ds.waterpollutiontracker.WaterPollutionTrackerGrpc.WaterPollutionTrackerBlockingStub;
 import ds.waterpollutiontracker.WaterPollutionTrackerGrpc.WaterPollutionTrackerStub;
-
+import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.jmdns.JmDNS;
@@ -118,11 +120,17 @@ public class WaterPollutionTrackerClient {
         JLabel titleLabelMonitor = new JLabel("Method 3: Monitor Water Pollution");
         panel.add(titleLabelMonitor);
         
-        JLabel monitorLocationLabel = new JLabel("Location:");
-        panel.add(monitorLocationLabel);
+        JLabel monitorLocationLabel1 = new JLabel("Location 1:");
+        panel.add(monitorLocationLabel1);
 
-        JTextField monitorLocationField = new JTextField(20);
-        panel.add(monitorLocationField);
+        JTextField monitorLocationField1 = new JTextField(20);
+        panel.add(monitorLocationField1);
+        
+        JLabel monitorLocationLabel2 = new JLabel("Location 2:");
+        panel.add(monitorLocationLabel2);
+
+        JTextField monitorLocationField2 = new JTextField(20);
+        panel.add(monitorLocationField2);
 
         JButton monitorButton = new JButton("Monitor Water Pollution");
         panel.add(monitorButton);
@@ -136,7 +144,7 @@ public class WaterPollutionTrackerClient {
         getHistoryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	String location = historyLocationField.getText();
+                String location = historyLocationField.getText();
                 long startTime = startTimeModel.getDate().getTime();
                 long endTime = endTimeModel.getDate().getTime();
 
@@ -148,14 +156,24 @@ public class WaterPollutionTrackerClient {
                         .setEndTime(endTime)
                         .setLocation(location).build();
 
-                Iterator<WaterPollutionLevel> historyResponseIterator = blockingStub
-                        .getWaterPollutionHistory(historyRequest);
-                while (historyResponseIterator.hasNext()) {
-                    WaterPollutionLevel historyResponse = historyResponseIterator.next();
-                    historyOutputArea.append("History message sent by the server: " + historyResponse + "\n");
-                }
+                // Set the deadline to 5 seconds
+                long deadlineInSeconds = 5;
+                Deadline deadline = Deadline.after(deadlineInSeconds, TimeUnit.SECONDS);
 
-                channel.shutdown();
+                try {
+                    Iterator<WaterPollutionLevel> historyResponseIterator = blockingStub
+                            .withDeadline(deadline)
+                            .getWaterPollutionHistory(historyRequest);
+
+                    while (historyResponseIterator.hasNext()) {
+                        WaterPollutionLevel historyResponse = historyResponseIterator.next();
+                        historyOutputArea.append("History message sent by the server: " + historyResponse + "\n");
+                    }
+                } catch (StatusRuntimeException ex) {
+                    historyOutputArea.append("Error encountered in WaterPollutionTrackerClient: " + ex.getMessage() + "\n");
+                } finally {
+                    channel.shutdown();
+                }
             }
         });
 
@@ -172,10 +190,21 @@ public class WaterPollutionTrackerClient {
                 WaterPollutionAlertsRequest alertRequest = WaterPollutionAlertsRequest.newBuilder()
                         .setLocation(location).setThreshold(threshold).build();
 
-                WaterPollutionAlertsResponse alertsResponse = blockingStub.getWaterPollutionAlerts(alertRequest);
-                alertsOutputArea.append("Alerts sent by the server: " + alertsResponse.getAlertsList() + "\n");
-
-                channel.shutdown();
+                try {
+                    // Set a deadline of 5 seconds
+                    WaterPollutionAlertsResponse alertsResponse = blockingStub
+                            .withDeadlineAfter(5, TimeUnit.SECONDS)
+                            .getWaterPollutionAlerts(alertRequest);
+                    alertsOutputArea.append("Alerts sent by the server: " + alertsResponse.getAlertsList() + "\n");
+                } catch (StatusRuntimeException ex) {
+                    if (ex.getStatus() == Status.DEADLINE_EXCEEDED) {
+                        alertsOutputArea.append("Error: Deadline exceeded while waiting for server response.\n");
+                    } else {
+                        alertsOutputArea.append("Error encountered in WaterPollutionTrackerClient: " + ex.getMessage() + "\n");
+                    }
+                } finally {
+                    channel.shutdown();
+                }
             }
         });
 
@@ -183,17 +212,16 @@ public class WaterPollutionTrackerClient {
         monitorButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String location = monitorLocationField.getText();
+                String location1 = monitorLocationField1.getText();
+                String location2 = monitorLocationField2.getText();
 
-                ManagedChannel channel = ManagedChannelBuilder.forAddress(resolvedIP, port).usePlaintext().build();
+                ManagedChannel channel = ManagedChannelBuilder.forAddress(resolvedIP, port)
+                        .usePlaintext().build();
                 WaterPollutionTrackerStub asyncStub = WaterPollutionTrackerGrpc.newStub(channel);
 
-                WaterPollutionMonitorRequest monitorRequest = WaterPollutionMonitorRequest.newBuilder()
-                        .setLocation(location).build();
-
                 CountDownLatch finishedLatch = new CountDownLatch(1);
-
-                StreamObserver<WaterPollutionMonitorRequest> monitorRequestObserver = asyncStub
+                StreamObserver<WaterPollutionMonitorRequest> monitorRequestObserver1 = asyncStub
+                        .withDeadlineAfter(10, TimeUnit.SECONDS) // set deadline to 10 seconds
                         .monitorWaterPollution(new StreamObserver<WaterPollutionLevel>() {
                             @Override
                             public void onNext(WaterPollutionLevel value) {
@@ -202,8 +230,28 @@ public class WaterPollutionTrackerClient {
 
                             @Override
                             public void onError(Throwable t) {
-                                monitorOutputArea.append(
-                                        "Error encountered in WaterPollutionTrackerClient: " + t.getMessage() + "\n");
+                                monitorOutputArea.append("Error encountered in WaterPollutionTrackerClient: " + t.getMessage() + "\n");
+                                finishedLatch.countDown();
+                            }
+
+                            @Override
+                            public void onCompleted() {
+                                monitorOutputArea.append("Real-time data receiving completed.\n");
+                                finishedLatch.countDown();
+                            }
+                        });
+
+                StreamObserver<WaterPollutionMonitorRequest> monitorRequestObserver2 = asyncStub
+                        .withDeadlineAfter(10, TimeUnit.SECONDS) // set deadline to 10 seconds
+                        .monitorWaterPollution(new StreamObserver<WaterPollutionLevel>() {
+                            @Override
+                            public void onNext(WaterPollutionLevel value) {
+                                monitorOutputArea.append("Received real-time data: " + value + "\n");
+                            }
+
+                            @Override
+                            public void onError(Throwable t) {
+                                monitorOutputArea.append("Error encountered in WaterPollutionTrackerClient: " + t.getMessage() + "\n");
                                 finishedLatch.countDown();
                             }
 
@@ -215,19 +263,32 @@ public class WaterPollutionTrackerClient {
                         });
 
                 try {
-                    monitorRequestObserver.onNext(monitorRequest);
+                    if (!location1.isEmpty()) {
+                        WaterPollutionMonitorRequest monitorRequest1 = WaterPollutionMonitorRequest.newBuilder()
+                                .setLocation(location1).build();
+                        monitorRequestObserver1.onNext(monitorRequest1);
+                    }
+
+                    if (!location2.isEmpty()) {
+                        WaterPollutionMonitorRequest monitorRequest2 = WaterPollutionMonitorRequest.newBuilder()
+                                .setLocation(location2)
+                                .build();
+                        monitorRequestObserver2.onNext(monitorRequest2);
+                    }
 
                     // Sleep for demonstration purposes, replace with appropriate logic
                     Thread.sleep(5000);
 
-                    monitorRequestObserver.onCompleted();
+                    monitorRequestObserver1.onCompleted();
+                    monitorRequestObserver2.onCompleted();
 
                     // Wait for the server to complete sending data
                     if (!finishedLatch.await(1, TimeUnit.MINUTES)) {
-                        monitorOutputArea.append("monitorWaterPollution can not finish within 1 minutes\n");
+                        monitorOutputArea.append("monitorWaterPollution can not finish within 1 minute\n");
                     }
                 } catch (RuntimeException e1) {
-                    monitorRequestObserver.onError(e1);
+                    monitorRequestObserver1.onError(e1);
+                    monitorRequestObserver2.onError(e1);
                     throw e1;
                 } catch (InterruptedException e2) {
                     e2.printStackTrace();

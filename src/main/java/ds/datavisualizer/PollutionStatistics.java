@@ -17,6 +17,7 @@ private static final long serialVersionUID = 0L;
   }
   private PollutionStatistics() {
     averagePollutionLevel_ = 0F;
+    highestPollutionLevel_ = 0F;
   }
 
   @java.lang.Override
@@ -46,6 +47,11 @@ private static final long serialVersionUID = 0L;
           case 13: {
 
             averagePollutionLevel_ = input.readFloat();
+            break;
+          }
+          case 21: {
+
+            highestPollutionLevel_ = input.readFloat();
             break;
           }
           default: {
@@ -89,6 +95,15 @@ private static final long serialVersionUID = 0L;
     return averagePollutionLevel_;
   }
 
+  public static final int HIGHESTPOLLUTIONLEVEL_FIELD_NUMBER = 2;
+  private float highestPollutionLevel_;
+  /**
+   * <code>float highestPollutionLevel = 2;</code>
+   */
+  public float getHighestPollutionLevel() {
+    return highestPollutionLevel_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -106,6 +121,9 @@ private static final long serialVersionUID = 0L;
     if (averagePollutionLevel_ != 0F) {
       output.writeFloat(1, averagePollutionLevel_);
     }
+    if (highestPollutionLevel_ != 0F) {
+      output.writeFloat(2, highestPollutionLevel_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -118,6 +136,10 @@ private static final long serialVersionUID = 0L;
     if (averagePollutionLevel_ != 0F) {
       size += com.google.protobuf.CodedOutputStream
         .computeFloatSize(1, averagePollutionLevel_);
+    }
+    if (highestPollutionLevel_ != 0F) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeFloatSize(2, highestPollutionLevel_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -139,6 +161,10 @@ private static final long serialVersionUID = 0L;
         java.lang.Float.floatToIntBits(getAveragePollutionLevel())
         == java.lang.Float.floatToIntBits(
             other.getAveragePollutionLevel()));
+    result = result && (
+        java.lang.Float.floatToIntBits(getHighestPollutionLevel())
+        == java.lang.Float.floatToIntBits(
+            other.getHighestPollutionLevel()));
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -153,6 +179,9 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + AVERAGEPOLLUTIONLEVEL_FIELD_NUMBER;
     hash = (53 * hash) + java.lang.Float.floatToIntBits(
         getAveragePollutionLevel());
+    hash = (37 * hash) + HIGHESTPOLLUTIONLEVEL_FIELD_NUMBER;
+    hash = (53 * hash) + java.lang.Float.floatToIntBits(
+        getHighestPollutionLevel());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -288,6 +317,8 @@ private static final long serialVersionUID = 0L;
       super.clear();
       averagePollutionLevel_ = 0F;
 
+      highestPollutionLevel_ = 0F;
+
       return this;
     }
 
@@ -315,6 +346,7 @@ private static final long serialVersionUID = 0L;
     public ds.datavisualizer.PollutionStatistics buildPartial() {
       ds.datavisualizer.PollutionStatistics result = new ds.datavisualizer.PollutionStatistics(this);
       result.averagePollutionLevel_ = averagePollutionLevel_;
+      result.highestPollutionLevel_ = highestPollutionLevel_;
       onBuilt();
       return result;
     }
@@ -365,6 +397,9 @@ private static final long serialVersionUID = 0L;
       if (other == ds.datavisualizer.PollutionStatistics.getDefaultInstance()) return this;
       if (other.getAveragePollutionLevel() != 0F) {
         setAveragePollutionLevel(other.getAveragePollutionLevel());
+      }
+      if (other.getHighestPollutionLevel() != 0F) {
+        setHighestPollutionLevel(other.getHighestPollutionLevel());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -417,6 +452,32 @@ private static final long serialVersionUID = 0L;
     public Builder clearAveragePollutionLevel() {
       
       averagePollutionLevel_ = 0F;
+      onChanged();
+      return this;
+    }
+
+    private float highestPollutionLevel_ ;
+    /**
+     * <code>float highestPollutionLevel = 2;</code>
+     */
+    public float getHighestPollutionLevel() {
+      return highestPollutionLevel_;
+    }
+    /**
+     * <code>float highestPollutionLevel = 2;</code>
+     */
+    public Builder setHighestPollutionLevel(float value) {
+      
+      highestPollutionLevel_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>float highestPollutionLevel = 2;</code>
+     */
+    public Builder clearHighestPollutionLevel() {
+      
+      highestPollutionLevel_ = 0F;
       onChanged();
       return this;
     }

@@ -11,4 +11,9 @@ public interface PollutionStatisticsOrBuilder extends
    * <code>float averagePollutionLevel = 1;</code>
    */
   float getAveragePollutionLevel();
+
+  /**
+   * <code>float highestPollutionLevel = 2;</code>
+   */
+  float getHighestPollutionLevel();
 }

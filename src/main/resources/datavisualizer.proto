@@ -26,6 +26,7 @@ message PollutionStatisticsRequest {
 
 message PollutionStatistics {
     float averagePollutionLevel = 1;
+    float highestPollutionLevel = 2;
 }
 
 message LocationFilterRequest {
@@ -46,4 +47,3 @@ message PollutionLevel {
     float pollutionLevel = 3;
     int64 timestamp = 4;
 }
-

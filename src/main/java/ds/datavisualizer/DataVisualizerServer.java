@@ -16,124 +16,146 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class DataVisualizerServer extends DataVisualizationImplBase {
-	static int port = 50143;
-    public static void main(String[] args) throws InterruptedException, IOException {
-        DataVisualizerServer dataVisualizer = new DataVisualizerServer();
+	static int port = 50088;
 
-        
+	public static void main(String[] args) throws InterruptedException, IOException {
+		DataVisualizerServer dataVisualizer = new DataVisualizerServer();
 
-        Server server;
-        try {
-            server = ServerBuilder.forPort(port).addService(dataVisualizer).build().start();
+		Server server;
+		try {
+			server = ServerBuilder.forPort(port).addService(dataVisualizer).build().start();
 
-            System.out.println("DataVisualizer started, listening on " + port);
-            
-            registerWithJmDNS();
-            server.awaitTermination();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+			System.out.println("DataVisualizer started, listening on " + port);
 
-    @Override
-    public void getPollutionStatistics(PollutionStatisticsRequest request,
-                                       StreamObserver<PollutionStatistics> responseObserver) {
-        List<PollutionLevel> sampleData = generateSamplePollutionData();
-        // Process the sample data to calculate pollution statistics
-        // For simplicity, I'll just send the first pollution level as an example
-        PollutionStatistics statistics = PollutionStatistics.newBuilder()
-                .setAveragePollutionLevel(sampleData.get(0).getPollutionLevel()).build();
-        responseObserver.onNext(statistics);
-        responseObserver.onCompleted();
-    }
+			registerWithJmDNS();
+			server.awaitTermination();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 
-    @Override
-    public StreamObserver<LocationFilterRequest> filterDataByLocation(StreamObserver<PollutionLevel> responseObserver) {
-        return new StreamObserver<LocationFilterRequest>() {
-            @Override
-            public void onNext(LocationFilterRequest request) {
-                List<PollutionLevel> sampleData = generateSamplePollutionData();
+	@Override
+	public void getPollutionStatistics(PollutionStatisticsRequest request,
+			StreamObserver<PollutionStatistics> responseObserver) {
+		List<PollutionLevel> sampleData = generateSamplePollutionData();
+		String location = request.getLocation();
+		float totalPollutionLevel = 0;
+		int count = 0;
+		float highestPollutionLevel = Float.MIN_VALUE;
 
-                // Filter the data based on the location in the request
-                for (PollutionLevel pollutionLevel : sampleData) {
-                    if (pollutionLevel.getLocation().equals(request.getLocation())) {
-                        responseObserver.onNext(pollutionLevel);
-                    }
-                }
-            }
+		// Calculate the average and highest pollution level for the requested location
+		for (PollutionLevel pollutionLevel : sampleData) {
+			if (pollutionLevel.getLocation().equals(location)) {
+				float currentPollutionLevel = pollutionLevel.getPollutionLevel();
+				totalPollutionLevel += currentPollutionLevel;
+				count++;
 
-            @Override
-            public void onError(Throwable t) {
-                t.printStackTrace();
-            }
+				if (currentPollutionLevel > highestPollutionLevel) {
+					highestPollutionLevel = currentPollutionLevel;
+				}
+			}
+		}
 
-            @Override
-            public void onCompleted() {
-                responseObserver.onCompleted();
-            }
-        };
-    }
+		PollutionStatistics.Builder statisticsBuilder = PollutionStatistics.newBuilder();
 
-    @Override
-    public StreamObserver<FavoriteLocationRequest> setFavoriteLocation(
-            StreamObserver<FavoriteLocationResponse> responseObserver) {
-        return new StreamObserver<FavoriteLocationRequest>() {
-            @Override
-            public void onNext(FavoriteLocationRequest request) {
-                // Save the favorite location
-                // For simplicity, we'll just print the location and assume it's saved
-                System.out.println("Favorite location saved: " + request.getLocation());
+		if (count > 0) {
+			float averagePollutionLevel = totalPollutionLevel / count;
+			statisticsBuilder.setAveragePollutionLevel(averagePollutionLevel)
+					.setHighestPollutionLevel(highestPollutionLevel);
+		}
 
-                FavoriteLocationResponse response = FavoriteLocationResponse.newBuilder()
-                        .setStatus("Location saved successfully").build();
-                responseObserver.onNext(response);
-            }
+		responseObserver.onNext(statisticsBuilder.build());
+		responseObserver.onCompleted();
+	}
 
-            @Override
-            public void onError(Throwable t) {
-                t.printStackTrace();
-            }
+	@Override
+	public StreamObserver<LocationFilterRequest> filterDataByLocation(StreamObserver<PollutionLevel> responseObserver) {
+		return new StreamObserver<LocationFilterRequest>() {
+			@Override
+			public void onNext(LocationFilterRequest request) {
+				List<PollutionLevel> sampleData = generateSamplePollutionData();
 
-            @Override
-            public void onCompleted() {
-                responseObserver.onCompleted();
-            }
-        };
-    }
+				// Filter the data based on the location in the request
+				for (PollutionLevel pollutionLevel : sampleData) {
+					if (pollutionLevel.getLocation().equals(request.getLocation())) {
+						responseObserver.onNext(pollutionLevel);
+					}
+				}
+			}
 
-    private List<PollutionLevel> generateSamplePollutionData() {
-        // This method generates sample data for demonstration purposes
-        List<PollutionLevel> pollutionData = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 1; i <= 10; i++) {
-            PollutionLevel pollutionLevel = PollutionLevel.newBuilder()
-                    .setLocation("Dublin " + i)
-                    .setPollutionType("Pollution type "+ i)
-                    .setPollutionLevel(random.nextFloat() * 100).setTimestamp(Instant.now().getEpochSecond()).build();
-            pollutionData.add(pollutionLevel);
-        }
-        return pollutionData;
-    }
-    
-    // JmDNS registration method
-    public static void registerWithJmDNS() {
-        try {
-            // Create a JmDNS instance
-            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+			@Override
+			public void onError(Throwable t) {
+				t.printStackTrace();
+			}
 
-            // Register a service
-            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "data-visualizer", port, "DataVisualizer service");
-            jmdns.registerService(serviceInfo);
+			@Override
+			public void onCompleted() {
+				responseObserver.onCompleted();
+			}
+		};
+	}
 
-            // Wait a bit
-            Thread.sleep(20000);
+	@Override
+	public StreamObserver<FavoriteLocationRequest> setFavoriteLocation(
+			StreamObserver<FavoriteLocationResponse> responseObserver) {
+		return new StreamObserver<FavoriteLocationRequest>() {
+			@Override
+			public void onNext(FavoriteLocationRequest request) {
+				// Save the favorite location
+				// For simplicity, we'll just print the location and assume it's saved
+				System.out.println("Favorite location saved: " + request.getLocation());
 
-            // Unregister all services
-            // jmdns.unregisterAllServices();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+				FavoriteLocationResponse response = FavoriteLocationResponse.newBuilder()
+						.setStatus("Location saved successfully").build();
+				responseObserver.onNext(response);
+			}
+
+			@Override
+			public void onError(Throwable t) {
+				t.printStackTrace();
+			}
+
+			@Override
+			public void onCompleted() {
+				responseObserver.onCompleted();
+			}
+		};
+	}
+
+	private List<PollutionLevel> generateSamplePollutionData() {
+		// This method generates sample data for demonstration purposes
+		List<PollutionLevel> pollutionData = new ArrayList<>();
+		Random random = new Random();
+		for (int i = 1; i <= 10; i++) {
+			PollutionLevel pollutionLevel = PollutionLevel.newBuilder()
+					.setLocation("Dublin " + i)
+					.setPollutionType("Pollution type" + i).setPollutionLevel(random.nextFloat() * 100)
+					.setTimestamp(Instant.now().getEpochSecond()).build();
+			pollutionData.add(pollutionLevel);
+		}
+		return pollutionData;
+	}
+
+	// JmDNS registration method
+	public static void registerWithJmDNS() {
+		try {
+			// Create a JmDNS instance
+			JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
+
+			// Register a service
+			ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "data-visualizer", port,
+					"DataVisualizer service");
+			jmdns.registerService(serviceInfo);
+
+			// Wait a bit
+			Thread.sleep(20000);
+
+			// Unregister all services
+			// jmdns.unregisterAllServices();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

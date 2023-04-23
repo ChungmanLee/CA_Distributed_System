@@ -55,24 +55,25 @@ public final class DataVisualizerImpl {
     java.lang.String[] descriptorData = {
       "\n\024datavisualizer.proto\022\016datavisualizer\"." +
       "\n\032PollutionStatisticsRequest\022\020\n\010location" +
-      "\030\001 \001(\t\"4\n\023PollutionStatistics\022\035\n\025average" +
-      "PollutionLevel\030\001 \001(\002\")\n\025LocationFilterRe" +
-      "quest\022\020\n\010location\030\001 \001(\t\"+\n\027FavoriteLocat" +
-      "ionRequest\022\020\n\010location\030\001 \001(\t\"*\n\030Favorite" +
-      "LocationResponse\022\016\n\006status\030\001 \001(\t\"d\n\016Poll" +
-      "utionLevel\022\020\n\010location\030\001 \001(\t\022\025\n\rpollutio" +
-      "nType\030\002 \001(\t\022\026\n\016pollutionLevel\030\003 \001(\002\022\021\n\tt" +
-      "imestamp\030\004 \001(\0032\327\002\n\021DataVisualization\022m\n\026" +
-      "GetPollutionStatistics\022*.datavisualizer." +
-      "PollutionStatisticsRequest\032#.datavisuali" +
-      "zer.PollutionStatistics\"\0000\001\022c\n\024FilterDat" +
-      "aByLocation\022%.datavisualizer.LocationFil" +
-      "terRequest\032\036.datavisualizer.PollutionLev" +
-      "el\"\000(\0010\001\022n\n\023SetFavoriteLocation\022\'.datavi" +
-      "sualizer.FavoriteLocationRequest\032(.datav" +
-      "isualizer.FavoriteLocationResponse\"\000(\0010\001" +
-      "B)\n\021ds.datavisualizerB\022DataVisualizerImp" +
-      "lP\001b\006proto3"
+      "\030\001 \001(\t\"S\n\023PollutionStatistics\022\035\n\025average" +
+      "PollutionLevel\030\001 \001(\002\022\035\n\025highestPollution" +
+      "Level\030\002 \001(\002\")\n\025LocationFilterRequest\022\020\n\010" +
+      "location\030\001 \001(\t\"+\n\027FavoriteLocationReques" +
+      "t\022\020\n\010location\030\001 \001(\t\"*\n\030FavoriteLocationR" +
+      "esponse\022\016\n\006status\030\001 \001(\t\"d\n\016PollutionLeve" +
+      "l\022\020\n\010location\030\001 \001(\t\022\025\n\rpollutionType\030\002 \001" +
+      "(\t\022\026\n\016pollutionLevel\030\003 \001(\002\022\021\n\ttimestamp\030" +
+      "\004 \001(\0032\327\002\n\021DataVisualization\022m\n\026GetPollut" +
+      "ionStatistics\022*.datavisualizer.Pollution" +
+      "StatisticsRequest\032#.datavisualizer.Pollu" +
+      "tionStatistics\"\0000\001\022c\n\024FilterDataByLocati" +
+      "on\022%.datavisualizer.LocationFilterReques" +
+      "t\032\036.datavisualizer.PollutionLevel\"\000(\0010\001\022" +
+      "n\n\023SetFavoriteLocation\022\'.datavisualizer." +
+      "FavoriteLocationRequest\032(.datavisualizer" +
+      ".FavoriteLocationResponse\"\000(\0010\001B)\n\021ds.da" +
+      "tavisualizerB\022DataVisualizerImplP\001b\006prot" +
+      "o3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -97,7 +98,7 @@ public final class DataVisualizerImpl {
     internal_static_datavisualizer_PollutionStatistics_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_datavisualizer_PollutionStatistics_descriptor,
-        new java.lang.String[] { "AveragePollutionLevel", });
+        new java.lang.String[] { "AveragePollutionLevel", "HighestPollutionLevel", });
     internal_static_datavisualizer_LocationFilterRequest_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_datavisualizer_LocationFilterRequest_fieldAccessorTable = new
