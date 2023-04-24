@@ -39,7 +39,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
             e.printStackTrace();
         }
     }
-
+    
+    //server-side streaming rpc that will receive location, start time and end time. This server will streaming and send back to the history.
     @Override
     public void getWaterPollutionHistory(WaterPollutionHistoryRequest request,
                                          StreamObserver<WaterPollutionLevel> responseObserver) {
@@ -61,14 +62,14 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         }
         responseObserver.onCompleted();
     }
-
+    
+    // it will return an alert message only when the pollution level is larger than the threshold the client gave.
     @Override
     public void getWaterPollutionAlerts(WaterPollutionAlertsRequest request,
                                         StreamObserver<WaterPollutionAlertsResponse> responseObserver) {
-        // TODO: Replace this with actual data retrieval from the database
         List<WaterPollutionAlert> alerts = generateSampleAlerts();
 
-        int threshold = request.getThreshold();
+        float threshold = request.getThreshold(); // Update to float
         String location = request.getLocation();
 
         List<WaterPollutionAlert> filteredAlerts = alerts.stream()
@@ -83,11 +84,11 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
-
+    
+    // bidirectional rpc. This method is responsible for monitoring real-time water pollution data for a specified location.
     @Override
     public StreamObserver<WaterPollutionMonitorRequest> monitorWaterPollution(
             StreamObserver<WaterPollutionLevel> responseObserver) {
-        // TODO: Replace this with actual real-time data monitoring implementation
         return new StreamObserver<WaterPollutionMonitorRequest>() {
             @Override
             public void onNext(WaterPollutionMonitorRequest request) {
@@ -115,6 +116,7 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         };
     }
     
+    // helper method to generate some sample for getWaterPollutionHistory rpc
     private List<WaterPollutionLevel> generateSampleDataHistory(Instant startTime, Instant endTime) {
         // This method generates sample data for demonstration purposes
         List<WaterPollutionLevel> pollutionLevels = new ArrayList<>();
@@ -135,7 +137,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         }
         return pollutionLevels;
     }
-
+    
+    // helper method to generate some sample for monitorWaterPollution rpc
     private List<WaterPollutionLevel> generateSampleDataMonitor() {
         // This method generates sample data for demonstration purposes
         List<WaterPollutionLevel> pollutionLevels = new ArrayList<>();
@@ -169,7 +172,8 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         }
         return pollutionLevels;
     }
-
+    
+    // helper method to generate some sample for getWaterPollutionAlert rpc
     private List<WaterPollutionAlert> generateSampleAlerts() {
         // This method generates sample alerts for demonstration purposes
         List<WaterPollutionAlert> alerts = new ArrayList<>();
@@ -186,7 +190,7 @@ public class WaterPollutionTrackerServer extends WaterPollutionTrackerImplBase {
         return alerts;
     }
     
- // Add the JmDNS registration method here
+    // JmDNS registration method here
     public static void registerWithJmDNS() {
         try {
             // Create a JmDNS instance

@@ -17,189 +17,176 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 
 public class AirPollutionTrackerServer extends AirPollutionTrackerImplBase {
-	static int port = 50085;
+	static int port = 50093;
+
+	public static void main(String[] args) throws InterruptedException, IOException {
+		AirPollutionTrackerServer aTracker = new AirPollutionTrackerServer();
+
+		Server server;
+		try {
+			server = ServerBuilder.forPort(port).addService(aTracker).build().start();
+
+			System.out.println("AirPollutionTracker started, listening on " + port);
+
+			registerWithJmDNS();
+			server.awaitTermination();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 	
-    public static void main(String[] args) throws InterruptedException, IOException {
-        AirPollutionTrackerServer aTracker = new AirPollutionTrackerServer();
+	// Implementation of method 1. server-side streaming rpc that will receive location, start time and end time. This server will streaming and send back to the history.
+	@Override
+	public void getAirPollutionHistory(AirPollutionHistoryRequest request,
+			StreamObserver<AirPollutionLevel> responseObserver) {
+		Instant startTime = Instant.ofEpochMilli(request.getStartTime());
+		Instant endTime = Instant.ofEpochMilli(request.getEndTime());
+		String location = request.getLocation();
 
-        Server server;
-        try {
-            server = ServerBuilder.forPort(port)
-                    .addService(aTracker)
-                    .build()
-                    .start();
+		// Call the generateSampleData() method with startTime and endTime
+		List<AirPollutionLevel> pollutionLevels = generateSampleData(startTime, endTime);
 
-            System.out.println("AirPollutionTracker started, listening on " + port);
-            
-            registerWithJmDNS();
-            server.awaitTermination();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+		List<AirPollutionLevel> filteredData = pollutionLevels.stream()
+				.filter(level -> level.getLocation().equals(location))
+				.filter(level -> Instant.parse(level.getTimestamp()).isAfter(startTime))
+				.filter(level -> Instant.parse(level.getTimestamp()).isBefore(endTime)).collect(Collectors.toList());
 
-    @Override
-    public void getAirPollutionHistory(AirPollutionHistoryRequest request,
-                                       StreamObserver<AirPollutionLevel> responseObserver) {
-        Instant startTime = Instant.ofEpochMilli(request.getStartTime());
-        Instant endTime = Instant.ofEpochMilli(request.getEndTime());
-        String location = request.getLocation();
+		for (AirPollutionLevel level : filteredData) {
+			responseObserver.onNext(level);
+		}
+		responseObserver.onCompleted();
+	}
+	
+	// it will return an alert message only when the pollution level is larger than the threshold the client gave.
+	@Override
+	public void getAirPollutionAlerts(AirPollutionAlertsRequest request,
+	    StreamObserver<AirPollutionAlertsResponse> responseObserver) {
+	    List<AirPollutionAlert> alerts = generateSampleAlerts();
 
-        // Call the generateSampleData() method with startTime and endTime
-        List<AirPollutionLevel> pollutionLevels = generateSampleData(startTime, endTime);
+	    int threshold = request.getThreshold();
+	    String location = request.getLocation();
 
-        List<AirPollutionLevel> filteredData = pollutionLevels.stream()
-                .filter(level -> level.getLocation().equals(location))
-                .filter(level -> Instant.parse(level.getTimestamp()).isAfter(startTime))
-                .filter(level -> Instant.parse(level.getTimestamp()).isBefore(endTime))
-                .collect(Collectors.toList());
+	    List<AirPollutionAlert> filteredAlerts = alerts.stream()
+	            .filter(alert -> alert.getLocation().equals(location))
+	            .filter(alert -> alert.getPollutionLevel() > (float)threshold) // This line has been updated
+	            .collect(Collectors.toList());
 
-        for (AirPollutionLevel level : filteredData) {
-            responseObserver.onNext(level);
-        }
-        responseObserver.onCompleted();
-    }
+	    AirPollutionAlertsResponse response = AirPollutionAlertsResponse.newBuilder().addAllAlerts(filteredAlerts)
+	            .build();
 
-    @Override
-    public void getAirPollutionAlerts(AirPollutionAlertsRequest request,
-                                      StreamObserver<AirPollutionAlertsResponse> responseObserver) {
-        // TODO: Replace this with actual data retrieval from the database
-        List<AirPollutionAlert> alerts = generateSampleAlerts();
+	    responseObserver.onNext(response);
+	    responseObserver.onCompleted();
+	}
 
-        int threshold = request.getThreshold();
-        String location = request.getLocation();
+	// bidirectional rpc. This method is responsible for monitoring real-time water pollution data for a specified location.
+	@Override
+	public StreamObserver<AirPollutionMonitorRequest> monitorAirPollution(
+			StreamObserver<AirPollutionLevel> responseObserver) {
+		return new StreamObserver<AirPollutionMonitorRequest>() {
+			@Override
+			public void onNext(AirPollutionMonitorRequest request) {
+				String location = request.getLocation();
 
-        List<AirPollutionAlert> filteredAlerts = alerts.stream()
-                .filter(alert -> alert.getLocation().equals(location))
-                .filter(alert -> alert.getPollutionLevel() > threshold)
-                .collect(Collectors.toList());
+				// Generate sample data for demonstration purposes
+				List<AirPollutionLevel> pollutionLevels = generateSampleDataMonitor();
 
-        AirPollutionAlertsResponse response = AirPollutionAlertsResponse.newBuilder()
-                .addAllAlerts(filteredAlerts)
-                .build();
+				for (AirPollutionLevel level : pollutionLevels) {
+					if (level.getLocation().equals(location)) {
+						responseObserver.onNext(level);
+					}
+				}
+			}
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
-    }
+			@Override
+			public void onError(Throwable t) {
+				System.out.println("Error encountered in AirPollutionTrackerServer: " + t.getMessage());
+			}
 
-    @Override
-    public StreamObserver<AirPollutionMonitorRequest> monitorAirPollution(
-            StreamObserver<AirPollutionLevel> responseObserver) {
-        // TODO: Replace this with actual real-time data monitoring implementation
-        return new StreamObserver<AirPollutionMonitorRequest>() {
-            @Override
-            public void onNext(AirPollutionMonitorRequest request) {
-                String location = request.getLocation();
+			@Override
+			public void onCompleted() {
+				responseObserver.onCompleted();
+			}
+		};
+	}
+	
+	// helper method to generate some sample for getWaterPollutionHistory rpc
+	private List<AirPollutionLevel> generateSampleData(Instant startTime, Instant endTime) {
+		// This method generates sample data for demonstration purposes
+		List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
+		Random random = new Random();
+		for (int i = 0; i < 10; i++) {
+			Instant timestamp = startTime
+					.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
+			AirPollutionLevel level = AirPollutionLevel.newBuilder().setLocation("Dublin " + i)
+					.setPollutionType("Polluion type " + i).setPollutionLevel(random.nextFloat() * 200)
+					.setTimestamp(timestamp.toString()).build();
+			pollutionLevels.add(level);
+		}
+		for (int i = 0; i < 10; i++) {
+			Instant timestamp = startTime
+					.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
+			AirPollutionLevel level = AirPollutionLevel.newBuilder().setLocation("Dublin " + i)
+					.setPollutionType("Polluion type " + i).setPollutionLevel(random.nextFloat() * 200)
+					.setTimestamp(timestamp.toString()).build();
+			pollutionLevels.add(level);
+		}
+		return pollutionLevels;
+	}
+	
+	// helper method to generate some sample for monitorWaterPollution rpc
+	private List<AirPollutionLevel> generateSampleDataMonitor() {
+		// This method generates sample data for demonstration purposes
+		List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
+		Random random = new Random();
+		for (int i = 0; i < 10; i++) {
+			AirPollutionLevel level = AirPollutionLevel.newBuilder().setLocation("Dublin " + i)
+					.setPollutionType("Polluion type " + i).setPollutionLevel(random.nextFloat() * 200)
+					.setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString()).build();
+			pollutionLevels.add(level);
+		}
+		for (int i = 0; i < 10; i++) {
+			AirPollutionLevel level = AirPollutionLevel.newBuilder().setLocation("Dublin " + i)
+					.setPollutionType("Polluion type " + i).setPollutionLevel(random.nextFloat() * 200)
+					.setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString()).build();
+			pollutionLevels.add(level);
+		}
+		return pollutionLevels;
+	}
 
-                // Generate sample data for demonstration purposes
-                List<AirPollutionLevel> pollutionLevels = generateSampleDataMonitor();
-                
-                for (AirPollutionLevel level : pollutionLevels) {
-                    if (level.getLocation().equals(location)) {
-                        responseObserver.onNext(level);
-                    }
-                }
-            }
+	// helper method to generate some sample for getWaterPollutionAlert rpc
+	private List<AirPollutionAlert> generateSampleAlerts() {
+		// This method generates sample alerts for demonstration purposes
+		List<AirPollutionAlert> alerts = new ArrayList<>();
+		Random random = new Random();
+		for (int i = 1; i <= 10; i++) {
+			AirPollutionAlert alert = AirPollutionAlert.newBuilder().setLocation("Dublin " + i)
+					.setPollutionType("Pollution type " + i).setPollutionLevel(random.nextFloat() * 300)
+					.setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString()).build();
+			alerts.add(alert);
+		}
+		return alerts;
+	}
 
-            @Override
-            public void onError(Throwable t) {
-                System.out.println("Error encountered in AirPollutionTrackerServer: " + t.getMessage());
-            }
+	// JmDNS registration method
+	public static void registerWithJmDNS() {
+		try {
+			// Create a JmDNS instance
+			JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
 
-            @Override
-            public void onCompleted() {
-                responseObserver.onCompleted();
-            }
-        };
-    }
-    
-    private List<AirPollutionLevel> generateSampleData(Instant startTime, Instant endTime) {
-        // This method generates sample data for demonstration purposes
-        List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < 10; i++) {
-            Instant timestamp = startTime.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
-            AirPollutionLevel level = AirPollutionLevel.newBuilder()
-                    .setLocation("Dublin " + i)
-                    .setPollutionType("Polluion type " + i)
-                    .setPollutionLevel(random.nextFloat() * 200)
-                    .setTimestamp(timestamp.toString())
-                    .build();
-            pollutionLevels.add(level);
-        }
-        for (int i = 0; i < 10; i++) {
-            Instant timestamp = startTime.plusSeconds(random.nextInt((int) (endTime.getEpochSecond() - startTime.getEpochSecond())));
-            AirPollutionLevel level = AirPollutionLevel.newBuilder()
-                    .setLocation("Dublin " + i)
-                    .setPollutionType("Polluion type " + i)
-                    .setPollutionLevel(random.nextFloat() * 200)
-                    .setTimestamp(timestamp.toString())
-                    .build();
-            pollutionLevels.add(level);
-        }
-        return pollutionLevels;
-    }
+			// Register a service
+			ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "air-pollution-tracker", port,
+					"AirPollutionTracker service");
+			jmdns.registerService(serviceInfo);
 
-    private List<AirPollutionLevel> generateSampleDataMonitor() {
-        // This method generates sample data for demonstration purposes
-        List<AirPollutionLevel> pollutionLevels = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < 10; i++) {
-            AirPollutionLevel level = AirPollutionLevel.newBuilder()
-                    .setLocation("Dublin " + i)
-                    .setPollutionType("Polluion type " + i)
-                    .setPollutionLevel(random.nextFloat() * 200)
-                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
-                    .build();
-            pollutionLevels.add(level);
-        }
-        for (int i = 0; i < 10; i++) {
-            AirPollutionLevel level = AirPollutionLevel.newBuilder()
-                    .setLocation("Dublin " + i)
-                    .setPollutionType("Polluion type " + i)
-                    .setPollutionLevel(random.nextFloat() * 200)
-                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
-                    .build();
-            pollutionLevels.add(level);
-        }
-        return pollutionLevels;
-    }
+			// Wait a bit
+			Thread.sleep(20000);
 
-    private List<AirPollutionAlert> generateSampleAlerts() {
-        // This method generates sample alerts for demonstration purposes
-        List<AirPollutionAlert> alerts = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < 5; i++) {
-            AirPollutionAlert alert = AirPollutionAlert.newBuilder()
-                    .setLocation("Dunlin " + i)
-                    .setPollutionType("Pollution type " + i)
-                    .setPollutionLevel(random.nextFloat() * 300)
-                    .setTimestamp(Instant.now().minusSeconds(random.nextInt(3600)).toString())
-                    .build();
-            alerts.add(alert);
-        }
-        return alerts;
-    }
-    
-    // JmDNS registration method
-    public static void registerWithJmDNS() {
-        try {
-            // Create a JmDNS instance
-            JmDNS jmdns = JmDNS.create(InetAddress.getLocalHost());
-
-            // Register a service
-            ServiceInfo serviceInfo = ServiceInfo.create("_http._tcp.local.", "air-pollution-tracker", port, "AirPollutionTracker service");
-            jmdns.registerService(serviceInfo);
-
-            // Wait a bit
-            Thread.sleep(20000);
-
-            // Unregister all services
-            // jmdns.unregisterAllServices();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+			// Unregister all services
+			// jmdns.unregisterAllServices();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

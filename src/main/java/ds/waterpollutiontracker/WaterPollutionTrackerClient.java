@@ -46,7 +46,8 @@ public class WaterPollutionTrackerClient {
             System.out.println("Could not resolve the service.");
         }
     }
-
+    
+    //GUI
     public static void runClientGui(String ip, int port) {
         JFrame frame = new JFrame("Water Pollution Tracker");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -140,7 +141,7 @@ public class WaterPollutionTrackerClient {
         JScrollPane monitorScrollPane = new JScrollPane(monitorOutputArea);
         panel.add(monitorScrollPane);
         
-        // Get Water Pollution History ActionListener
+        // for Method 1. Get Water Pollution History ActionListener
         getHistoryButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -177,7 +178,7 @@ public class WaterPollutionTrackerClient {
             }
         });
 
-        // Get Water Pollution Alerts ActionListener
+        // for Method 2. Get Water Pollution Alerts ActionListener
         getAlertsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -208,7 +209,7 @@ public class WaterPollutionTrackerClient {
             }
         });
 
-        // Monitor Water Pollution ActionListener
+        // for Method 3. Monitor Water Pollution ActionListener
         monitorButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -218,7 +219,7 @@ public class WaterPollutionTrackerClient {
                 ManagedChannel channel = ManagedChannelBuilder.forAddress(resolvedIP, port)
                         .usePlaintext().build();
                 WaterPollutionTrackerStub asyncStub = WaterPollutionTrackerGrpc.newStub(channel);
-
+                
                 CountDownLatch finishedLatch = new CountDownLatch(1);
                 StreamObserver<WaterPollutionMonitorRequest> monitorRequestObserver1 = asyncStub
                         .withDeadlineAfter(10, TimeUnit.SECONDS) // set deadline to 10 seconds
@@ -240,7 +241,7 @@ public class WaterPollutionTrackerClient {
                                 finishedLatch.countDown();
                             }
                         });
-
+                
                 StreamObserver<WaterPollutionMonitorRequest> monitorRequestObserver2 = asyncStub
                         .withDeadlineAfter(10, TimeUnit.SECONDS) // set deadline to 10 seconds
                         .monitorWaterPollution(new StreamObserver<WaterPollutionLevel>() {

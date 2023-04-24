@@ -139,7 +139,7 @@ public class AirPollutionTrackerClient {
 		JScrollPane monitorScrollPane = new JScrollPane(monitorOutputArea);
 		panel.add(monitorScrollPane);
 
-		// Get Air Pollution History ActionListener
+		// For Method 1. Get Air Pollution History ActionListener
 		getHistoryButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -176,7 +176,7 @@ public class AirPollutionTrackerClient {
 			}
 		});
 
-		// Get Air Pollution Alerts ActionListener
+		// For Method 2. Get Air Pollution Alerts ActionListener
 		getAlertsButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -210,7 +210,7 @@ public class AirPollutionTrackerClient {
 			}
 		});
 
-		// Monitor Air Pollution ActionListener
+		// For Method 3. Monitor Air Pollution ActionListener
 		monitorButton.addActionListener(new ActionListener() {
 		    @Override
 		    public void actionPerformed(ActionEvent e) {
